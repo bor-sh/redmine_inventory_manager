@@ -401,7 +401,7 @@ class InventoryController < ApplicationController
   end
 
   def parts
-    @categories = InventoryCategory.find(:all, :order => 'name').map {|c| [c.name,c.id]}
+    @categories = InventoryCategory.all(:order => 'name').map {|c| [c.name,c.id]}
     @statuses = { l('active') => 1, l("obsolet") => 2, l('discontinued') => 3}
     @statuses_array = ['',l('active'),l("obsolet"),l('discontinued')]
     current_user = find_current_user
@@ -435,7 +435,7 @@ class InventoryController < ApplicationController
         flash[:error] = l('permission_denied')
       end
     end
-    @parts = InventoryPart.find(:all)
+    @parts = InventoryPart.all
   end
   
   def providors

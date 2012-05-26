@@ -6,6 +6,8 @@ Redmine::Plugin.register :redmine_inventory_manager do
   description 'Take your warehouse or office inventory on the same platform of your projects'
   version '0.0.1'
   
+  requires_redmine :version_or_higher => '2.0.0'
+  
   permission :inventory, {:inventory => [:index, :movements, :categories, :parts, :warehouses, :providors]}, :public => false
   
   menu :top_menu, :inventory, { :controller => 'inventory', :action => 'index' }, {:caption => 'Inventory', :before => 'admin'}

@@ -1,6 +1,6 @@
-<% labelled_tabular_form_for :inventory_providor, @inventory_providor,
+<%= labelled_form_for :inventory_providor, @inventory_providor,
                              :url => {:action => 'providors', :id => @inventory_providor},
-                             :html => {:id => 'providor-form'} do |f| %>
+                             :html => {:class => "tabular", :id => 'providor-form'} do |f| %>
     <%= error_messages_for 'inventory_providor' %>
       <p>
         <%= f.text_field :identification, :size => 20, :required => true %>

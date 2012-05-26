@@ -13,9 +13,9 @@
     span.show();
   }
 </script>
-<% labelled_tabular_form_for :inventory_out_movement, @inventory_out_movement,
+<%= labelled_form_for :inventory_out_movement, @inventory_out_movement,
                              :url => {:action => 'movements', :id => @inventory_out_movement},
-                             :html => {:id => 'part-out-form'} do |f| %>
+                             :html => {:class => "tabular", :id => 'part-out-form'} do |f| %>
     <%= error_messages_for 'inventory_out_movement' %>
       <p>
         <%= f.select(:warehouse_from_id, @warehouses,{:disabled => true}) %>

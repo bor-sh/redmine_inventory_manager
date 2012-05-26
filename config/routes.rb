@@ -1,0 +1,8 @@
+match '/inventory/inventory_stock_xls', :to => 'inventory#inventory_stock_xls', :via => [:get, :post]
+match '/inventory/reports', :to => 'inventory#reports', :via => [:get, :post]
+match '/inventory/categories', :to => 'inventory#categories', :via => [:get, :post]
+match '/inventory/parts', :to => 'inventory#parts', :via => [:get, :post]
+match '/inventory/providors', :to => 'inventory#providors', :via => [:get, :post]
+match '/inventory/warehouses', :to => 'inventory#warehouses', :via => [:get, :post]
+match '/inventory/movements', :to => 'inventory#movements', :via => [:get, :post]
+match '/inventory', :to => 'inventory#index', :via => [:get, :post]

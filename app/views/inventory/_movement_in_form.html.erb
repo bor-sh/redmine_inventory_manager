@@ -27,9 +27,9 @@
       });
   }
 </script>
-<% labelled_tabular_form_for :inventory_in_movement, @inventory_in_movement,
+<%= labelled_form_for :inventory_in_movement, @inventory_in_movement,
                              :url => {:action => 'movements', :id => @inventory_in_movement},
-                             :html => {:id => 'part-in-form'} do |f| %>
+                             :html => {:class => "tabular", :id => 'part-in-form'} do |f| %>
     <%= error_messages_for 'inventory_in_movement' %>
       <p>
         <label><%= l('part_comes_from') %></label>
