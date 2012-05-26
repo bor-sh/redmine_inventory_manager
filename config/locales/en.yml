@@ -77,4 +77,6 @@ en:
   active: "Active"
   obsolet: "Obsolet"
   discontinued: "Discontinued"
+  export: "Export"
+  reports: "Report"
   inventory_inputs_document_report: "In Movements w/Documents"
