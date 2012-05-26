@@ -69,20 +69,19 @@ class InventoryController < ApplicationController
       params[:warehouse] = params[:warehouse].to_i
     end
     @stock = get_stock(add)
-    
   end
   
   def get_stock(warehouse_query)
     sql = ActiveRecord::Base.connection()
     @stock = sql.execute("SELECT in_movements.part_number as part_number,
-    in_movements.serial_number as serial_number, in_movements.category as category,
+    in_movements.serial_number as serial_number, in_movements.manufacturer as manufacturer, in_movements.category as category,
     in_movements.part_description as description, in_movements.value,
     IFNULL(in_movements.quantity,0) as input,
     IFNULL(out_movements.quantity,0) as output,
     (IFNULL(in_movements.quantity,0)-IFNULL(out_movements.quantity,0)) as stock,
     GREATEST(IFNULL(in_movements.last_date,0), IFNULL(out_movements.last_date,0)) as last_movement
       FROM
-  (SELECT `inventory_parts`.`part_number` AS `part_number`, `inventory_movements`.`serial_number` AS `serial_number`,
+  (SELECT `inventory_parts`.`part_number` AS `part_number`, `inventory_parts`.`manufacturer` AS `manufacturer`, `inventory_movements`.`serial_number` AS `serial_number`,
       `inventory_parts`.`value` AS `value`,sum(`inventory_movements`.`quantity`) AS `quantity`,
       max(`inventory_movements`.`date`) AS `last_date`
         FROM (`inventory_parts`
@@ -92,7 +91,7 @@ class InventoryController < ApplicationController
                 GROUP BY `inventory_parts`.`id`,`inventory_movements`.`serial_number`
                 ORDER BY `inventory_parts`.`part_number`) as out_movements
         RIGHT JOIN
-  (SELECT `inventory_parts`.`part_number` AS `part_number`, `inventory_categories`.`name` AS `category`,`inventory_parts`.`description` AS `part_description`,`inventory_movements`.`serial_number` AS `serial_number`,
+  (SELECT `inventory_parts`.`part_number` AS `part_number`, `inventory_parts`.`manufacturer` AS `manufacturer`,  `inventory_categories`.`name` AS `category`,`inventory_parts`.`description` AS `part_description`,`inventory_movements`.`serial_number` AS `serial_number`,
       `inventory_parts`.`value` AS `value`,sum(`inventory_movements`.`quantity`) AS `quantity`,
       max(`inventory_movements`.`date`) AS `last_date`
         FROM (`inventory_parts`
@@ -142,19 +141,19 @@ class InventoryController < ApplicationController
     end
     @stock = get_stock(add)
     
-    headers = [l(:field_short_part_number), l(:field_category), l(:field_description), l(:field_value),
+    headers = [l(:field_short_part_number), l(:field_manufacturer), l(:field_category), l(:field_description), l(:field_value),
                 l(:inputs), l(:outputs),  l(:stock), l(:last_movement), l(:total)]
     fields = []
     total = 0
     @stock.each do |s|
-      new_fields = [s[0],s[2],s[3],s[4],s[5],s[6],s[7],s[8],(s[4].to_f*s[7].to_f)]
+      new_fields = [s[0],s[2],s[3],s[4],s[5],s[6],s[7],s[8],s[9],(s[5].to_f*s[8].to_f)]
       if s[1] and s[1].length > 0
         new_fields[0] << "(#{s[1]})"
       end
-      total += s[4].to_f*s[7].to_f 
+      total += s[5].to_f*s[8].to_f
       fields << new_fields
     end
-    fields << [nil,nil,nil,nil,nil,nil,nil,l(:total),total]
+    fields << [nil,nil,nil,nil,nil,nil,nil,nil,l(:total),total]
     
     arrays = []
     arrays[0] = headers

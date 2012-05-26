@@ -1,5 +1,4 @@
-﻿<%= render :partial => 'top_menu' %>
-<h2><%= l('reports').capitalize %></h2>
+<%= render :partial => 'top_menu' %>
 <div>
   <label><%= l('Warehouse') %></label>
   <%= select_tag(:warehouse, options_for_select(@warehouses,params[:warehouse]),{:onchange=>'submit();'}) %>
