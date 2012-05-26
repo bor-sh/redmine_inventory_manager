@@ -7,7 +7,8 @@
 *Instalation*
   1.- Install Redmine (http://www.redmine.org/wiki/1/RedmineInstall)
   2.- Get the plugin and install
-    $> ruby script/plugin install git://github.com/mkinski/redmine_inventory_manager.git
+    $> cd $REDMINE_PATH/plugins
+    $> git clone git://github.com/mkinski/redmine_inventory_manager.git
     $> rake redmine:plugins:migrate RAILS_ENV=production
   3.- Restart your server and enjoy! :D
 	
