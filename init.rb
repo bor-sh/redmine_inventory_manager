@@ -10,5 +10,5 @@ Redmine::Plugin.register :redmine_inventory_manager do
   
   permission :inventory, {:inventory => [:index, :movements, :categories, :parts, :warehouses, :providors]}, :public => false
   
-  menu :top_menu, :inventory, { :controller => 'inventory', :action => 'index' }, {:caption => 'Inventory', :before => 'admin'}
+  menu :top_menu, :inventory, { :controller => 'inventory', :action => 'index' }, {:caption => 'Inventory', :before => 'admin', :if => Proc.new { User.current.logged? }}
 end
