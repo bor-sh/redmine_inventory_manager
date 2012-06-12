@@ -72,38 +72,57 @@ class InventoryController < ApplicationController
   end
   
   def get_stock(warehouse_query)
-    sql = ActiveRecord::Base.connection()
-    @stock = sql.execute("SELECT in_movements.part_number as part_number,
-    in_movements.serial_number as serial_number, in_movements.manufacturer as manufacturer, in_movements.category as category,
-    in_movements.part_description as description, in_movements.value,
-    IFNULL(in_movements.quantity,0) as input,
-    IFNULL(out_movements.quantity,0) as output,
-    (IFNULL(in_movements.quantity,0)-IFNULL(out_movements.quantity,0)) as stock,
-    GREATEST(IFNULL(in_movements.last_date,0), IFNULL(out_movements.last_date,0)) as last_movement
-      FROM
-  (SELECT `inventory_parts`.`part_number` AS `part_number`, `inventory_parts`.`manufacturer` AS `manufacturer`, `inventory_movements`.`serial_number` AS `serial_number`,
-      `inventory_parts`.`value` AS `value`,sum(`inventory_movements`.`quantity`) AS `quantity`,
-      max(`inventory_movements`.`date`) AS `last_date`
-        FROM (`inventory_parts`
-          LEFT JOIN `inventory_movements` on((`inventory_movements`.`inventory_part_id` = `inventory_parts`.`id`)))
-            WHERE (isnull(`inventory_movements`.`inventory_providor_id`) AND isnull(`inventory_movements`.`user_from_id`)"+warehouse_query+"
-              AND ((`inventory_movements`.`project_id` is not null) or (`inventory_movements`.`user_to_id` is not null)))
-                GROUP BY `inventory_parts`.`id`,`inventory_movements`.`serial_number`
-                ORDER BY `inventory_parts`.`part_number`) as out_movements
-        RIGHT JOIN
-  (SELECT `inventory_parts`.`part_number` AS `part_number`, `inventory_parts`.`manufacturer` AS `manufacturer`,  `inventory_categories`.`name` AS `category`,`inventory_parts`.`description` AS `part_description`,`inventory_movements`.`serial_number` AS `serial_number`,
-      `inventory_parts`.`value` AS `value`,sum(`inventory_movements`.`quantity`) AS `quantity`,
-      max(`inventory_movements`.`date`) AS `last_date`
-        FROM (`inventory_parts`
-          LEFT JOIN `inventory_movements` on((`inventory_movements`.`inventory_part_id` = `inventory_parts`.`id`))
-          LEFT JOIN `inventory_categories` on((`inventory_categories`.`id` = `inventory_parts`.`inventory_category_id`)))
-            WHERE (isnull(`inventory_movements`.`project_id`) and isnull(`inventory_movements`.`user_to_id`))"+warehouse_query+"
-              GROUP BY `inventory_parts`.`id`,`inventory_movements`.`serial_number`
-              ORDER BY `inventory_parts`.`part_number`) as in_movements
-        ON
-          (out_movements.part_number = in_movements.part_number
-          AND out_movements.serial_number = in_movements.serial_number)
-        ORDER BY category, part_number;")
+     sql = ActiveRecord::Base.connection()
+     @stock = sql.execute(
+     "SELECT  in_movements.part_number as part_number,
+              in_movements.serial_number as serial_number, 
+              in_movements.manufacturer as manufacturer, 
+              in_movements.category as category,
+              in_movements.part_description as description, 
+              in_movements.value,
+        IFNULL(in_movements.quantity,0) as input,
+        IFNULL(out_movements.quantity,0) as output,
+        (IFNULL(in_movements.quantity,0)-IFNULL(out_movements.quantity,0)) as stock,
+
+      GREATEST(IFNULL(in_movements.last_date,0), IFNULL(out_movements.last_date,0)) as last_movement
+        FROM
+      (SELECT `inventory_parts`.`part_number` AS `part_number`, 
+              `inventory_parts`.`manufacturer` AS `manufacturer`, 
+              `inventory_movements`.`serial_number` AS `serial_number`,
+              `inventory_parts`.`value` AS `value`,
+              sum(`inventory_movements`.`quantity`) AS `quantity`,
+              max(`inventory_movements`.`date`) AS `last_date`
+          FROM (`inventory_parts`
+            LEFT JOIN `inventory_movements` 
+                  on((`inventory_movements`.`inventory_part_id` = `inventory_parts`.`id`)))
+              WHERE (
+                  isnull(`inventory_movements`.`inventory_providor_id`) 
+                  AND isnull(`inventory_movements`.`user_from_id`)"+warehouse_query+"
+                  AND ((`inventory_movements`.`project_id` is not null) or (`inventory_movements`.`user_to_id` is not null)))
+                  GROUP BY `inventory_parts`.`id`,`inventory_movements`.`serial_number`
+                  ORDER BY `inventory_parts`.`part_number`) as out_movements
+            RIGHT JOIN
+                  (SELECT `inventory_parts`.`part_number` AS `part_number`, 
+                          `inventory_parts`.`manufacturer` AS `manufacturer`,
+                          `inventory_categories`.`name` AS `category`,
+                          `inventory_parts`.`description` AS `part_description`,
+                          `inventory_movements`.`serial_number` AS `serial_number`,
+                          `inventory_parts`.`value` AS `value`,
+                          sum(`inventory_movements`.`quantity`) AS `quantity`,
+                          max(`inventory_movements`.`date`) AS `last_date`
+                   FROM (`inventory_parts`
+                      LEFT JOIN `inventory_movements` 
+                          on((`inventory_movements`.`inventory_part_id` = `inventory_parts`.`id`))
+                      LEFT JOIN `inventory_categories` 
+                          on((`inventory_categories`.`id` = `inventory_parts`.`inventory_category_id`)))
+                   WHERE (isnull(`inventory_movements`.`project_id`) and isnull(`inventory_movements`.`user_to_id`))"+warehouse_query+"
+                   GROUP BY `inventory_parts`.`id`,
+                            `inventory_movements`.`serial_number`
+                   ORDER BY `inventory_parts`.`part_number`) as in_movements
+          ON
+            (out_movements.part_number = in_movements.part_number
+            AND out_movements.serial_number = in_movements.serial_number)
+          ORDER BY category, part_number;")
     return @stock
   end
   
@@ -219,8 +238,11 @@ class InventoryController < ApplicationController
                     ORDER BY `inventory_parts`.`part_number`) as in_movements
               ON
                 (out_movements.part_number = in_movements.part_number
-                AND out_movements.serial_number = in_movements.serial_number);").fetch_row
-    return @stock[5].to_f rescue 0
+                AND out_movements.serial_number = in_movements.serial_number);")
+    # TODO: check fetch_row alternatives for mysql2
+    @stock.each do |s|
+      return s[5].to_f rescue 0
+    end
   end
 
   def user_has_warehouse_permission(user_id, warehouse_id)
@@ -233,6 +255,19 @@ class InventoryController < ApplicationController
         return true
       end
     end
+    
+    InventoryWarehouse.find(:all).each do |manager|
+       if (User.current.id == manager.user_manager_id)
+          return true
+       else
+          Group.find(:all, :conditions => ["id = ?", manager.user_manager_id]).each do |grp|
+            if User.current.is_or_belongs_to?(grp)
+              return true
+            end
+          end
+       end
+    end 
+    
     return false
   end
 
@@ -241,12 +276,23 @@ class InventoryController < ApplicationController
     @providors = InventoryProvidor.find(:all, :order => 'name').map {|p| [p.name,p.id]}
     @inv_projects = Project.find(:all, :order => 'name').map {|p| [p.name,p.id]}
     @users = User.find(:all, :conditions => 'status=1' , :order => 'lastname ASC, firstname ASC').map {|u| [u.lastname+" "+u.firstname, u.id]}
-    @warehouses = InventoryWarehouse.find(:all, :order => 'name').map {|w| [w.name, w.id]}
+    @collect = Array.new
+    InventoryWarehouse.find(:all).each do |warhouse|
+        if User.current.id == warhouse.user_manager_id
+                  @collect.push(warhouse)
+        else
+           Group.find(:all, :conditions => ["id = ?", warhouse.user_manager_id]).each do |grp|
+              if User.current.is_or_belongs_to?(grp)
+                  @collect.push(warhouse)
+              end
+           end
+         end
+    end
+    @warehouses  = @collect.map{|w| [w.name, w.id]}
     @from_options = {l('User') => 'user_from_id', l('Warehouse') => 'warehouse_from_id', l('Providor') => 'inventory_providor_id'}
     @to_options = {l('User') => 'user_to_id', l('Project') => 'project_id'}
     @doc_types = { l('invoice') => 1, l('ticket') => 2, l('proforma-invoice') => 3, l("waybill") => 4, l("inventory") => 5}
-    current_user = find_current_user
-    @has_permission = current_user.admin? || user_has_warehouse_permission(current_user.id, nil)
+    @has_permission = User.current.admin? || user_has_warehouse_permission(User.current.id, nil)    
     
     unless params[:from_options]
       params[:from_options] = 'user_from_id'
@@ -259,7 +305,7 @@ class InventoryController < ApplicationController
     if params[:delete]
       mdel = InventoryMovement.find(params[:delete]) rescue false
       if mdel
-        if current_user.admin? or user_has_warehouse_permission(current_user.id, (mdel.warehouse_from_id != nil ? mdel.warehouse_from_id : 0)) or user_has_warehouse_permission(current_user.id, (mdel.warehouse_to_id != nil ? mdel.warehouse_to_id : 0))
+        if User.current.admin? or user_has_warehouse_permission(User.current.id, (mdel.warehouse_from_id != nil ? mdel.warehouse_from_id : 0)) or user_has_warehouse_permission(User.current.id, (mdel.warehouse_to_id != nil ? mdel.warehouse_to_id : 0))
           ok = InventoryMovement.delete(mdel) rescue false
           unless ok
             flash[:error] = l('cant_delete_register')
@@ -284,10 +330,10 @@ class InventoryController < ApplicationController
     end
     
     if params[:inventory_in_movement]
-      if current_user.admin? or (user_has_warehouse_permission(current_user.id, params[:inventory_in_movement][:warehouse_to_id]) and (@inventory_in_movement.warehouse_to_id == nil ? true : user_has_warehouse_permission(current_user.id, @inventory_in_movement.warehouse_to_id)))
+      if User.current.admin? or (user_has_warehouse_permission(User.current.id, params[:inventory_in_movement][:warehouse_to_id]) and (@inventory_in_movement.warehouse_to_id == nil ? true : user_has_warehouse_permission(User.current.id, @inventory_in_movement.warehouse_to_id)))
         unless params[:edit_in]
           @inventory_in_movement = InventoryMovement.new(params[:inventory_in_movement]) 
-          @inventory_in_movement.user_id = current_user.id
+          @inventory_in_movement.user_id = User.current.id
           @inventory_in_movement.date = DateTime.now
           if @inventory_in_movement.save
             @inventory_in_movement = InventoryMovement.new(params[:inventory_in_movement])
@@ -319,12 +365,12 @@ class InventoryController < ApplicationController
     end
     
     if params[:inventory_out_movement]
-      if current_user.admin? or (user_has_warehouse_permission(current_user.id, params[:inventory_out_movement][:warehouse_from_id]) and (@inventory_out_movement.warehouse_from_id == nil ? true : user_has_warehouse_permission(current_user.id, @inventory_out_movement.warehouse_from_id)))
+      if User.current.admin? or (user_has_warehouse_permission(User.current.id, params[:inventory_out_movement][:warehouse_from_id]) and (@inventory_out_movement.warehouse_from_id == nil ? true : user_has_warehouse_permission(User.current.id, @inventory_out_movement.warehouse_from_id)))
         unless params[:edit_out]
           @inventory_out_movement = InventoryMovement.new(params[:inventory_out_movement]) 
           available_stock = check_available_stock(@inventory_out_movement)
           if @inventory_out_movement.quantity <= available_stock
-            @inventory_out_movement.user_id = current_user.id
+            @inventory_out_movement.user_id = User.current.id
             @inventory_out_movement.date = DateTime.now
             if @inventory_out_movement.save
               @inventory_out_movement = InventoryMovement.new(params[:inventory_out_movement])
@@ -363,8 +409,7 @@ class InventoryController < ApplicationController
   end
 
   def categories
-    current_user = find_current_user
-    @has_permission = current_user.admin? || user_has_warehouse_permission(current_user.id, nil)
+    @has_permission = User.current.admin? || user_has_warehouse_permission(User.current.id, nil)
     
     if params[:delete] or params[:edit] or params[:inventory_category]
       if @has_permission
@@ -403,8 +448,7 @@ class InventoryController < ApplicationController
     @categories = InventoryCategory.all(:order => 'name').map {|c| [c.name,c.id]}
     @statuses = { l('active') => 1, l("obsolet") => 2, l('discontinued') => 3}
     @statuses_array = ['',l('active'),l("obsolet"),l('discontinued')]
-    current_user = find_current_user
-    @has_permission = current_user.admin? || user_has_warehouse_permission(current_user.id, nil)
+    @has_permission = User.current.admin? || user_has_warehouse_permission(User.current.id, nil)
     if params[:delete] or params[:edit] or params[:inventory_part]
       if @has_permission
     
@@ -438,8 +482,7 @@ class InventoryController < ApplicationController
   end
   
   def providors
-    current_user = find_current_user
-    @has_permission = current_user.admin? || user_has_warehouse_permission(current_user.id, nil)
+    @has_permission = User.current.admin? || user_has_warehouse_permission(User.current.id, nil)
     if params[:delete] or params[:edit] or params[:inventory_providor]
       if @has_permission
         
@@ -475,8 +518,9 @@ class InventoryController < ApplicationController
   end
   
   def warehouses
-    @users = User.find(:all, :conditions => 'status=1' , :order => 'lastname ASC, firstname ASC').map {|u| [u.lastname+" "+u.firstname, u.id]}
-    @has_permission = find_current_user.admin?
+    @users = Principal.active.find(:all,
+                              :order => 'lastname ASC').map {|u| [u.firstname+" "+u.lastname, u.id]}
+    @has_permission = User.current.admin?
     if params[:delete] or params[:edit] or params[:inventory_warehouse]
       if @has_permission
         if params[:delete]
@@ -504,7 +548,18 @@ class InventoryController < ApplicationController
         flash[:error] = l('permission_denied')
       end
     end
-    
-    @warehouses = InventoryWarehouse.find(:all)
+
+    @warehouses = Array.new
+    InventoryWarehouse.find(:all).each do |warhouse|
+        if User.current.id == warhouse.user_manager_id
+                  @warehouses.push(warhouse)
+        else
+           Group.find(:all, :conditions => ["id = ?", warhouse.user_manager_id]).each do |grp|
+              if User.current.is_or_belongs_to?(grp)
+                  @warehouses.push(warhouse)
+              end
+           end
+         end
+    end
   end
 end

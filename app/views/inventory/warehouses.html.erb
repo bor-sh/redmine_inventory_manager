@@ -14,7 +14,7 @@
   <tr><th>Id#</th><th><%= l('field_name') %></th><th><%= l('field_location') %></th><th><%= l('field_user_manager') %></th></tr>
   <% @warehouses.each do |w| %>
   <tr>
-    <td><%= w.id %></td><td><%= w.name %></td><td><%= w.location %></td><td><%= User.find(w.user_manager_id).login rescue "s/a" %></td>
+    <td><%= w.id %></td><td><%= w.name %></td><td><%= w.location %></td><td><%= Principal.find(w.user_manager_id).lastname rescue "s/a" %></td>
   <% if @has_permission %>
     <td><%= link_to image_tag('edit.png'), 'warehouses?edit='+w.id.to_s %></td>
     <td><%= link_to image_tag('delete.png'), 'warehouses?delete='+w.id.to_s, :confirm => l('delete_confirmation') %></td>
