@@ -1,3 +1,5 @@
+match '/inventory/ajax_get_part_value', :to => 'inventory#ajax_get_part_value', :via => [:post]
+match '/inventory/ajax_get_part_info', :to => 'inventory#ajax_get_part_info', :via => [:post]
 match '/inventory/inventory_stock_xls', :to => 'inventory#inventory_stock_xls', :via => [:get, :post]
 match '/inventory/reports', :to => 'inventory#reports', :via => [:get, :post]
 match '/inventory/categories', :to => 'inventory#categories', :via => [:get, :post, :put]
