@@ -1,6 +1,8 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
-class InventoryProvidorTest < Test::Unit::TestCase
+class InventoryProvidorTest < ActiveSupport::TestCase
+  self.fixture_path = File.dirname(__FILE__) + "/../fixtures/"
+  
   fixtures :inventory_providors
 
   # Replace this with your real tests.

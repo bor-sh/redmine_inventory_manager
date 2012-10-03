@@ -1,23 +1,35 @@
 # Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
 one:
   id: 1
-  part_number: 
+  inventory_part_id: 
   quantity: 
   document: 
   document_type: 
   value: 
-  providor_id: 
-  destiny_id: 
-  date: 
+  inventory_providor_id: 1
+  project_id: 1
+  other_destiny:
+  date:
   user_id: 1
+  user_from_id:
+  user_to_id:
+  warehouse_to_id:
+  warehouse_from_id:
+  serial_number:
 two:
   id: 2
-  part_number: 
+  inventory_part_id: 
   quantity: 
   document: 
   document_type: 
   value: 
-  providor_id: 
-  destiny_id: 
-  date: 
+  inventory_providor_id: 2
+  project_id: 1
+  other_destiny:
+  date:
   user_id: 1
+  user_from_id:
+  user_to_id:
+  warehouse_to_id:
+  warehouse_from_id:
+  serial_number:

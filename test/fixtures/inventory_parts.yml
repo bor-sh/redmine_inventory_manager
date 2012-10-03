@@ -3,15 +3,17 @@ one:
   id: 1
   part_number: 
   manufacturer: 
-  category: 
+  inventory_category_id: 
   description: 
   value: 
-  state: 1
+  status: 1
+  where:
 two:
   id: 2
   part_number: 
   manufacturer: 
-  category: 
+  inventory_category_id: 
   description: 
   value: 
-  state: 1
+  status: 1
+  where:
